@@ -275,14 +275,19 @@ function openFan() {
   const N = deck.length;
   const W = Math.min(window.innerWidth * .96, 980);
   const small = window.innerWidth < 640;
-  const R = Math.min(340, W * .46), off = R * .55;
+  /* 手机端扇形铺得更开：每牌露出 ~13px 边，靠左右转动浏览全扇 */
+  const R = small ? Math.min(W, 430) : Math.min(340, W * .46);
+  const spread = small ? Math.min((N * 13) / R, 2.5) : Math.PI * .74;
+  const off = small ? R * .66 : R * .55;
   const fanH = small ? 360 : 430;
   fan.style.height = fanH + "px";
+  fan.dataset.cap = small ? 60 : 46;
+  fan.dataset.sens = small ? .2 : .13;
   arc.style.transformOrigin = `50% ${fanH / 2 + off}px`;
   deck.forEach((d, i) => {
     const m = document.createElement("div");
     m.className = "mini";
-    const t = (i / (N - 1) - .5) * Math.PI * .70;
+    const t = (i / (N - 1) - .5) * spread;
     m.style.setProperty("--x", (Math.sin(t) * R).toFixed(1) + "px");
     m.style.setProperty("--y", (-Math.cos(t) * R + off).toFixed(1) + "px");
     m.style.setProperty("--r", (t * 57.3).toFixed(1) + "deg");
@@ -325,7 +330,8 @@ function openFan() {
       if (!fr.on) return;
       const dx = e.clientX - fr.x;
       fr.moved = Math.max(fr.moved, Math.abs(dx));
-      fr.v = Math.max(-46, Math.min(46, fr.r0 + dx * .13));
+      const cap = +fan.dataset.cap || 46, sens = +fan.dataset.sens || .13;
+      fr.v = Math.max(-cap, Math.min(cap, fr.r0 + dx * sens));
       const arc = fan.querySelector(".fan-arc");
       if (arc) arc.style.transform = `rotate(${fr.v}deg)`;
     });
